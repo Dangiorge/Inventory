@@ -10,7 +10,7 @@ import {
 } from "react-icons/fi";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-
+import { BiBox } from "react-icons/bi";
 export default function Sidebar() {
   const [hovered, setHovered] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(null);
@@ -19,10 +19,10 @@ export default function Sidebar() {
     { icon: <FiHome />, label: "Home", href: "/dashboard" },
     { icon: <FiUser />, label: "Users", href: "/dashboard/users" },
     {
-      icon: <FiSettings />,
+      icon: <BiBox />,
       label: "Invetory",
       children: [
-        { label: "Items", href: "/dashboard/inventory/items" },
+        { label: "📦 Add Items", href: "/dashboard/inventory/items" },
         { label: "Category", href: "/dashboard/inventory/category" },
       ],
     },
