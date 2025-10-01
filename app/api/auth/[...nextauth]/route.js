@@ -1,14 +1,14 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
-import connectDB from "@/lib/mongodb";
+import connectDb from "@/lib/mongodb";
 import User from "@/models/User";
 
 const authOptions = {
   providers: [
     CredentialsProvider({
       async authorize(credentials) {
-        await connectDB();
+        await connectDb();
         const user = await User.findOne({ email: credentials.email });
         if (!user) throw new Error("No user found");
         const isValid = await bcrypt.compare(

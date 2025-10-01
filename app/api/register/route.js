@@ -1,4 +1,4 @@
-import connectDB from "@/lib/mongodb";
+import connectDb from "@/lib/mongodb";
 import User from "@/models/User";
 import { hash } from "bcryptjs";
 
@@ -13,7 +13,7 @@ export async function POST(req) {
       );
     }
 
-    await connectDB();
+    await connectDb();
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });

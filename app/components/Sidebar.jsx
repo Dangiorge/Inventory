@@ -20,6 +20,14 @@ export default function Sidebar() {
     { icon: <FiUser />, label: "Users", href: "/dashboard/users" },
     {
       icon: <FiSettings />,
+      label: "Invetory",
+      children: [
+        { label: "Items", href: "/dashboard/inventory/items" },
+        { label: "Category", href: "/dashboard/inventory/category" },
+      ],
+    },
+    {
+      icon: <FiSettings />,
       label: "Tasks",
       children: [
         { label: "board", href: "/dashboard/tasktraker/board" },

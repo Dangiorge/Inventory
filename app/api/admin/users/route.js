@@ -1,10 +1,10 @@
-import connectDB from "@/lib/mongodb";
+import connectDb from "@/lib/mongodb";
 import User from "@/models/User";
 import { hash } from "bcryptjs";
 
 // GET all users
 export async function GET() {
-  await connectDB();
+  await connectDb();
   const users = await User.find({}, "-password"); // exclude password
   return new Response(JSON.stringify(users), { status: 200 });
 }
@@ -12,7 +12,7 @@ export async function GET() {
 // CREATE new user
 export async function POST(req) {
   try {
-    await connectDB();
+    await connectDb();
     const { name, email, password, role } = await req.json();
 
     const existingUser = await User.findOne({ email });

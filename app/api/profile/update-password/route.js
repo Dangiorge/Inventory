@@ -1,5 +1,5 @@
 // import connectDb from "@/lib/connectDb";
-import connectDB from "@/lib/mongodb";
+import connectDb from "@/lib/mongodb";
 
 import User from "@/models/User";
 import { hash, compare } from "bcryptjs";
@@ -9,7 +9,7 @@ export async function POST(req) {
     const { email, oldPassword, newPassword } = await req.json();
 
     // await connectDb();
-    await connectDB();
+    await connectDb();
 
     // find user
     const user = await User.findOne({ email });
