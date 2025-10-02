@@ -24,6 +24,7 @@ export default function Sidebar() {
       children: [
         { label: "📦 Add Items", href: "/dashboard/inventory/items" },
         { label: "Category", href: "/dashboard/inventory/category" },
+        { label: "Purchase", href: "/dashboard/inventory/purchase-requests" },
       ],
     },
     {
