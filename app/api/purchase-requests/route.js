@@ -1,43 +1,44 @@
 import connectDb from "@/lib/mongodb";
 import PurchaseRequest from "@/models/PurchaseRequest";
-import { getServerSession } from "next-auth"; // if you use NextAuth
-import User from "@/models/User";
+import { getServerSession } from "next-auth";
+// GET all requests
+export async function GET(req) {
+  await connectDb();
 
-export async function GET() {
-  try {
-    await connectDb();
-    const requests = await PurchaseRequest.find()
-      .populate("requester", "name email")
-      .populate("items.item", "name category sku");
-    return new Response(JSON.stringify(requests), { status: 200 });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-    });
+  const { searchParams } = new URL(req.url);
+  const status = searchParams.get("status");
+  const search = searchParams.get("search");
+
+  let filter = {};
+  if (status) filter.status = status;
+  if (search) {
+    filter.remark = { $regex: search, $options: "i" };
   }
+
+  const requests = await PurchaseRequest.find(filter)
+    .populate("requester", "name email")
+    .sort({ createdAt: -1 });
+
+  return Response.json(requests);
 }
 
+// CREATE a new request
 export async function POST(req) {
-  try {
-    await connectDb();
-    const body = await req.json();
-
-    // normally you'd get user from session:
-    // const session = await getServerSession(authOptions);
-    // const requesterId = session.user.id;
-    const requesterId = body.requester; // fallback for now
-
-    const request = new PurchaseRequest({
-      requester: requesterId,
-      items: [],
-      status: "Draft",
-    });
-
-    await request.save();
-    return new Response(JSON.stringify(request), { status: 201 });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
+  await connectDb();
+  const session = await getServerSession();
+  if (!session) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
     });
   }
+
+  const body = await req.json();
+
+  const newRequest = await PurchaseRequest.create({
+    requester: session.user.id, // 👈 this fixes the error
+    remark: body.remark || "",
+    status: "Draft",
+  });
+
+  return Response.json(newRequest);
 }

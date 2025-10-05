@@ -1,55 +1,87 @@
 import connectDb from "@/lib/mongodb";
 import PurchaseRequest from "@/models/PurchaseRequest";
 
+// GET single request
 export async function GET(req, { params }) {
-  try {
-    await connectDb();
-    const pr = await PurchaseRequest.findById(params.id)
-      .populate("items.item", "name sku category")
-      .populate("requester", "name email");
-    return new Response(JSON.stringify(pr), { status: 200 });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
+  await connectDb();
+
+  const request = await PurchaseRequest.findById(params.id)
+    .populate("requester", "name email")
+    .populate("items.item", "name unit");
+
+  if (!request) {
+    return new Response(JSON.stringify({ error: "Not found" }), {
+      status: 404,
     });
   }
+
+  return Response.json(request);
 }
 
+// UPDATE (add items, edit remark)
 export async function PUT(req, { params }) {
-  try {
-    await connectDb();
-    const body = await req.json();
-    const pr = await PurchaseRequest.findById(params.id);
+  await connectDb();
+  const body = await req.json();
 
-    if (!pr) return new Response("Not found", { status: 404 });
-
-    // Prevent edits if approved
-    if (pr.status === "Approved") {
-      return new Response("Cannot edit an approved request", { status: 400 });
-    }
-
-    // Update PR items/status
-    Object.assign(pr, body);
-    await pr.save();
-
-    return new Response(JSON.stringify(pr), { status: 200 });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-    });
+  let update = {};
+  if (body.remark !== undefined) update.remark = body.remark;
+  if (body.itemId && body.quantity) {
+    update.$push = { items: { item: body.itemId, quantity: body.quantity } };
   }
+
+  const updated = await PurchaseRequest.findByIdAndUpdate(params.id, update, {
+    new: true,
+  }).populate("items.item", "name unit");
+
+  return Response.json(updated);
 }
 
+// PATCH (status changes like submit, approve, reject)
+export async function PATCH(req, { params }) {
+  await connectDb();
+  const body = await req.json();
+
+  const update = {};
+  if (body.status === "Pending Approval") {
+    update.status = "Pending Approval";
+  }
+  if (body.status === "Approved") {
+    update.status = "Approved";
+    update.approvedAt = new Date();
+    update.approvedBy = body.userId;
+  }
+  if (body.status === "Rejected") {
+    update.status = "Rejected";
+    update.approvedAt = new Date();
+    update.approvedBy = body.userId;
+  }
+
+  const updated = await PurchaseRequest.findByIdAndUpdate(params.id, update, {
+    new: true,
+  }).populate("items.item", "name unit");
+
+  return Response.json(updated);
+}
+
+// DELETE request (only if Draft)
 export async function DELETE(req, { params }) {
-  try {
-    await connectDb();
-    await PurchaseRequest.findByIdAndDelete(params.id);
-    return new Response(JSON.stringify({ message: "Deleted" }), {
-      status: 200,
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
+  await connectDb();
+
+  const request = await PurchaseRequest.findById(params.id);
+  if (!request) {
+    return new Response(JSON.stringify({ error: "Not found" }), {
+      status: 404,
     });
   }
+
+  if (request.status !== "Draft") {
+    return new Response(
+      JSON.stringify({ error: "Only draft requests can be deleted" }),
+      { status: 400 },
+    );
+  }
+
+  await PurchaseRequest.findByIdAndDelete(params.id);
+
+  return Response.json({ success: true });
 }
