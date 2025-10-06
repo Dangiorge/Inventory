@@ -1,44 +1,59 @@
+import { NextResponse } from "next/server";
 import connectDb from "@/lib/mongodb";
 import PurchaseRequest from "@/models/PurchaseRequest";
-import { getServerSession } from "next-auth";
-// GET all requests
+
 export async function GET(req) {
   await connectDb();
-
   const { searchParams } = new URL(req.url);
-  const status = searchParams.get("status");
-  const search = searchParams.get("search");
+  const date = searchParams.get("date");
+  const sort = searchParams.get("sort");
 
   let filter = {};
-  if (status) filter.status = status;
-  if (search) {
-    filter.remark = { $regex: search, $options: "i" };
+  if (date) {
+    const start = new Date(date);
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
+    filter.createdAt = { $gte: start, $lte: end };
   }
 
-  const requests = await PurchaseRequest.find(filter)
-    .populate("requester", "name email")
-    .sort({ createdAt: -1 });
+  let requests = await PurchaseRequest.find(filter)
+    .populate("requester", "name")
+    .populate("approver", "name");
 
-  return Response.json(requests);
+  if (sort === "name") {
+    requests = requests.sort((a, b) =>
+      a.requester.name.localeCompare(b.requester.name),
+    );
+  }
+
+  return NextResponse.json(requests);
 }
 
-// CREATE a new request
 export async function POST(req) {
   await connectDb();
-  const session = await getServerSession();
-  if (!session) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-    });
+  const body = await req.json();
+  console.log(body);
+  try {
+    const newRequest = await PurchaseRequest.create(body);
+    return NextResponse.json(newRequest, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
+}
 
+export async function PUT(req) {
+  await connectDb();
   const body = await req.json();
 
-  const newRequest = await PurchaseRequest.create({
-    requester: session.user.id, // 👈 this fixes the error
-    remark: body.remark || "",
-    status: "Draft",
-  });
+  try {
+    const updated = await PurchaseRequest.findByIdAndUpdate(
+      body.id,
+      { status: "Approved", approver: body.approver },
+      { new: true },
+    ).populate("approver", "name");
 
-  return Response.json(newRequest);
+    return NextResponse.json(updated);
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
 }

@@ -6,23 +6,12 @@ const PurchaseRequestSchema = new mongoose.Schema({
     ref: "User",
     required: false,
   },
-  remark: { type: String, required: false },
-  status: {
-    type: String,
-    enum: ["Draft", "Pending Approval", "Approved", "Rejected"],
-    default: "Draft",
-  },
-  items: [
-    {
-      item: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
-      quantity: { type: Number, required: true, min: 1 },
-    },
-  ],
+  department: { type: String, required: true },
+  remark: { type: String },
+  status: { type: String, enum: ["Pending", "Approved"], default: "Pending" },
+  approver: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   createdAt: { type: Date, default: Date.now },
-  approvedAt: Date,
-  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 
-// ✅ Prevent model overwrite issue in Next.js hot reload
 export default mongoose.models.PurchaseRequest ||
   mongoose.model("PurchaseRequest", PurchaseRequestSchema);
