@@ -4,8 +4,9 @@ const PurchaseRequestSchema = new mongoose.Schema({
   requester: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: false,
+    required: true,
   },
+  requester_email: { type: String, rgit equired: true },
   department: { type: String, required: true },
   remark: { type: String },
   status: { type: String, enum: ["Pending", "Approved"], default: "Pending" },

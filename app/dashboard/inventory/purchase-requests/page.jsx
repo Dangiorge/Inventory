@@ -122,8 +122,11 @@ export default function PurchaseRequestsPage() {
             <tr key={req._id}>
               <td className="border p-2">{req._id.slice(-6)}</td>
               <td className="border p-2 text-blue-600">
-                <Link href={`/purchase-requests/${req._id}/items`}>
-                  {req.requester?.name || "Unknown"}
+                <Link
+                  href={`/dashboard/inventory/purchase-requests/${req._id}`}
+                >
+                  {req.requester_email || "Unknown"}
+                  {/* {console.log(req)} */}
                 </Link>
               </td>
               <td className="border p-2">{req.department}</td>

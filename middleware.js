@@ -24,7 +24,7 @@ export async function middleware(req) {
   }
 
   // Example: restrict dashboard pages based on role
-  if (pathname.startsWith("/dashboard/setting")) {
+  if (pathname.startsWith("/dashboard")) {
     if (token.role !== "admin") {
       // Redirect non-admins to homepage or error page
       url.pathname = "/dashboard";
