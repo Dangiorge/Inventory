@@ -6,9 +6,15 @@ const PurchaseRequestSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  requester_email: { type: String, rgit equired: true },
+  requester_email: { type: String, required: true },
   department: { type: String, required: true },
   remark: { type: String },
+  items: [
+    {
+      item: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
+      quantity: { type: Number, required: true, min: 1 },
+    },
+  ],
   status: { type: String, enum: ["Pending", "Approved"], default: "Pending" },
   approver: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   createdAt: { type: Date, default: Date.now },

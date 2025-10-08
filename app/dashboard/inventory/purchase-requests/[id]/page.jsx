@@ -1,9 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+// import PurchaseRequest from "@/models/PurchaseRequest";
 
 export default function PurchaseRequestDetails() {
   const { id } = useParams();
+  const [request, setRequest] = useState();
 
   // Mock inventory list
   const inventory = [
@@ -12,16 +14,25 @@ export default function PurchaseRequestDetails() {
     { _id: "ITEM003", name: "Suction Catheter FG-12", unit: "Each" },
     { _id: "ITEM004", name: "Syringe 10ml", unit: "Each" },
   ];
-
+  async function fetchRequests() {
+    let url = `/api/purchase-requests/${id}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    setRequest(data);
+  }
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+  // dateFilter, sortBy
   // Mock request data
-  const [request, setRequest] = useState({
-    id: id,
-    requesterName: "Absira Dagnew",
-    department: "Pharmacy",
-    remark: "Urgent stock refill",
-    status: "Pending Approval",
-    items: [],
-  });
+  // const [request, setRequest] = useState({
+  //   id: id,
+  //   requesterName: "Absira Dagnew",
+  //   department: "Pharmacy",
+  //   remark: "Urgent stock refill",
+  //   status: "Pending Approval",
+  //   items: [],
+  // });
 
   const [selectedItem, setSelectedItem] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -42,16 +53,18 @@ export default function PurchaseRequestDetails() {
     setQuantity(1);
   };
 
+  if (request == null) {
+    <div className="">.... Loading</div>;
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Request Info */}
       <div className="bg-white shadow rounded-xl p-4">
         <h2 className="text-xl font-bold mb-2">
-          Purchase Request #{request.id}
+          {/* Purchase Request #{request.id} */}
         </h2>
-        <p>
-          <strong>Requester:</strong> {request.requesterName}
-        </p>
+        <p>{/* <strong>Requester:</strong> {request.requester_email} */}</p>
         <p>
           <strong>Department:</strong> {request.department}
         </p>

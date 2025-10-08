@@ -145,6 +145,16 @@ export default function PurchaseRequestsPage() {
                   </button>
                 )}
               </td>
+              <td className="border p-2">
+                {req.status === "Pending" && (
+                  <button
+                    onClick={() => approveRequest(req._id)}
+                    className="bg-red-500 text-white px-2 py-1 rounded"
+                  >
+                    Delete
+                  </button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

@@ -5,9 +5,9 @@ import PurchaseRequest from "@/models/PurchaseRequest";
 export async function GET(req, { params }) {
   await connectDb();
 
-  const request = await PurchaseRequest.findById(params.id)
-    .populate("requester", "name email")
-    .populate("items.item", "name unit");
+  const request = await PurchaseRequest.findById(params.id);
+  // .populate("requester", "name email")
+  // .populate("items.item", "name unit");
 
   if (!request) {
     return new Response(JSON.stringify({ error: "Not found" }), {
