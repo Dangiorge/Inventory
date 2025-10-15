@@ -11,7 +11,8 @@ const PurchaseRequestSchema = new mongoose.Schema({
   remark: { type: String },
   items: [
     {
-      item: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
+      // item: { type: mongoose.Schema.Types.ObjectId, ref: "Item" },
+      item: { type: String },
       quantity: { type: Number, required: true, min: 1 },
     },
   ],

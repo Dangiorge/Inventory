@@ -1,11 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-// import PurchaseRequest from "@/models/PurchaseRequest";
 
 export default function PurchaseRequestDetails() {
   const { id } = useParams();
-  const [request, setRequest] = useState();
+
+  const [mockRequest, setMockRequest] = useState();
 
   // Mock inventory list
   const inventory = [
@@ -14,34 +14,51 @@ export default function PurchaseRequestDetails() {
     { _id: "ITEM003", name: "Suction Catheter FG-12", unit: "Each" },
     { _id: "ITEM004", name: "Syringe 10ml", unit: "Each" },
   ];
-  async function fetchRequests() {
-    let url = `/api/purchase-requests/${id}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    setRequest(data);
-  }
-  useEffect(() => {
-    fetchRequests();
-  }, []);
-  // dateFilter, sortBy
-  // Mock request data
-  // const [request, setRequest] = useState({
-  //   id: id,
-  //   requesterName: "Absira Dagnew",
-  //   department: "Pharmacy",
-  //   remark: "Urgent stock refill",
-  //   status: "Pending Approval",
-  //   items: [],
-  // });
 
+  const [request, setRequest] = useState(null);
   const [selectedItem, setSelectedItem] = useState("");
   const [quantity, setQuantity] = useState(1);
 
-  // Add item
+  async function fetchRequest() {
+    try {
+      const res = await fetch(`/api/purchase-requests/${id}`);
+      const data = await res.json();
+      setMockRequest({
+        _id: id || "68e717ab1968f8c16a01bb21",
+        requester: { name: "John Doe", email: data.requester_email },
+        department: "Pharmacy",
+        remark: "Need supplies for upcoming week",
+        status: "Pending",
+        items: [
+          { _id: "ITEM001", name: "Ambu Bag Child", unit: "Each", quantity: 2 },
+          {
+            _id: "ITEM002",
+            name: "Rectal Catheter 28G",
+            unit: "Each",
+            quantity: 5,
+          },
+        ],
+      });
+      setRequest(mockRequest);
+
+      console.log(data);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  // Simulate API fetch
+  useEffect(() => {
+    fetchRequest();
+  }, []);
+
+  // Add item to the request
   const addItem = () => {
     if (!selectedItem || quantity < 1) return;
 
     const itemData = inventory.find((i) => i._id === selectedItem);
+    if (!itemData) return;
+
     const newItem = { ...itemData, quantity };
 
     setRequest((prev) => ({
@@ -53,8 +70,8 @@ export default function PurchaseRequestDetails() {
     setQuantity(1);
   };
 
-  if (request == null) {
-    <div className="">.... Loading</div>;
+  if (!request) {
+    return <div className="p-6">Loading...</div>;
   }
 
   return (
@@ -62,9 +79,12 @@ export default function PurchaseRequestDetails() {
       {/* Request Info */}
       <div className="bg-white shadow rounded-xl p-4">
         <h2 className="text-xl font-bold mb-2">
-          {/* Purchase Request #{request.id} */}
+          Purchase Request #{request._id.slice(-6)}
         </h2>
-        <p>{/* <strong>Requester:</strong> {request.requester_email} */}</p>
+        <p>
+          <strong>Requester:</strong> {request.requester.name} (
+          {request.requester.email})
+        </p>
         <p>
           <strong>Department:</strong> {request.department}
         </p>
@@ -86,39 +106,37 @@ export default function PurchaseRequestDetails() {
       </div>
 
       {/* Add Items */}
-      {request.status !== "Approved" && (
-        <div className="bg-white shadow rounded-xl p-4">
-          <h3 className="text-lg font-semibold mb-3">Add Item</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <select
-              value={selectedItem}
-              onChange={(e) => setSelectedItem(e.target.value)}
-              className="border rounded-md p-2"
-            >
-              <option value="">-- Select Item --</option>
-              {inventory.map((item) => (
-                <option key={item._id} value={item._id}>
-                  {item.name} ({item.unit})
-                </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              min="1"
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              className="border rounded-md p-2"
-              placeholder="Quantity"
-            />
-            <button
-              onClick={addItem}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md"
-            >
-              Add
-            </button>
-          </div>
+      <div className="bg-white shadow rounded-xl p-4">
+        <h3 className="text-lg font-semibold mb-3">Add Item</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <select
+            value={selectedItem}
+            onChange={(e) => setSelectedItem(e.target.value)}
+            className="border rounded-md p-2"
+          >
+            <option value="">-- Select Item --</option>
+            {inventory.map((item) => (
+              <option key={item._id} value={item._id}>
+                {item.name} ({item.unit})
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            min="1"
+            value={quantity}
+            onChange={(e) => setQuantity(Number(e.target.value))}
+            className="border rounded-md p-2"
+            placeholder="Quantity"
+          />
+          <button
+            onClick={addItem}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md"
+          >
+            Add
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Items Table */}
       <div className="bg-white shadow rounded-xl overflow-auto">

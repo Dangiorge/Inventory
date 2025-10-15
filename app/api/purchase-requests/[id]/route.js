@@ -1,87 +1,48 @@
+import { NextResponse } from "next/server";
 import connectDb from "@/lib/mongodb";
 import PurchaseRequest from "@/models/PurchaseRequest";
 
-// GET single request
+// ✅ Get single purchase request by ID
 export async function GET(req, { params }) {
-  await connectDb();
+  try {
+    await connectDb();
+    const { id } = params;
+    console.log("📦 Fetching purchase request for ID:", id);
 
-  const request = await PurchaseRequest.findById(params.id);
-  // .populate("requester", "name email")
-  // .populate("items.item", "name unit");
+    const request = await PurchaseRequest.findById(id);
+    // .populate("requester", "name email role")
+    // .populate("approver", "name email role")
+    // .populate("items.item");
 
-  if (!request) {
-    return new Response(JSON.stringify({ error: "Not found" }), {
-      status: 404,
-    });
+    if (!request) {
+      console.log("⚠️ No request found for ID:", id);
+      return NextResponse.json({ error: "Request not found" }, { status: 404 });
+    }
+
+    console.log("✅ Found request:", request._id);
+    return NextResponse.json(request, { status: 200 });
+  } catch (err) {
+    console.error("❌ Error fetching purchase request:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
-
-  return Response.json(request);
 }
-
-// UPDATE (add items, edit remark)
-export async function PUT(req, { params }) {
-  await connectDb();
-  const body = await req.json();
-
-  let update = {};
-  if (body.remark !== undefined) update.remark = body.remark;
-  if (body.itemId && body.quantity) {
-    update.$push = { items: { item: body.itemId, quantity: body.quantity } };
-  }
-
-  const updated = await PurchaseRequest.findByIdAndUpdate(params.id, update, {
-    new: true,
-  }).populate("items.item", "name unit");
-
-  return Response.json(updated);
-}
-
-// PATCH (status changes like submit, approve, reject)
+// ✅ PATCH → Add items to existing request
 export async function PATCH(req, { params }) {
   await connectDb();
-  const body = await req.json();
+  const { id } = params;
+  const { item } = await req.json(); // expect { item: { _id, name, unit, quantity } }
 
-  const update = {};
-  if (body.status === "Pending Approval") {
-    update.status = "Pending Approval";
+  try {
+    const request = await PurchaseRequest.findById(id);
+    if (!request)
+      return NextResponse.json({ error: "Request not found" }, { status: 404 });
+
+    request.items.push(item); // add to items array
+    await request.save();
+
+    return NextResponse.json(request);
+  } catch (err) {
+    console.error("Error adding item:", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
-  if (body.status === "Approved") {
-    update.status = "Approved";
-    update.approvedAt = new Date();
-    update.approvedBy = body.userId;
-  }
-  if (body.status === "Rejected") {
-    update.status = "Rejected";
-    update.approvedAt = new Date();
-    update.approvedBy = body.userId;
-  }
-
-  const updated = await PurchaseRequest.findByIdAndUpdate(params.id, update, {
-    new: true,
-  }).populate("items.item", "name unit");
-
-  return Response.json(updated);
-}
-
-// DELETE request (only if Draft)
-export async function DELETE(req, { params }) {
-  await connectDb();
-
-  const request = await PurchaseRequest.findById(params.id);
-  if (!request) {
-    return new Response(JSON.stringify({ error: "Not found" }), {
-      status: 404,
-    });
-  }
-
-  if (request.status !== "Draft") {
-    return new Response(
-      JSON.stringify({ error: "Only draft requests can be deleted" }),
-      { status: 400 },
-    );
-  }
-
-  await PurchaseRequest.findByIdAndDelete(params.id);
-
-  return Response.json({ success: true });
 }

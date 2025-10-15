@@ -95,6 +95,7 @@ export async function POST(req) {
 
   const body = await req.json();
   const { department, remark } = body;
+  const items = {};
 
   const requesterId = session.user.id; // ✅ get the logged-in user's ID
   const role = session.user.role; // ✅ get the logged-in user's role
