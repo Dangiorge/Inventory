@@ -7,48 +7,50 @@ export default function PurchaseRequestDetails() {
 
   const [mockRequest, setMockRequest] = useState();
 
-  // Mock inventory list
-  const inventory = [
-    { _id: "ITEM001", name: "Ambu Bag Child", unit: "Each" },
-    { _id: "ITEM002", name: "Rectal Catheter 28G", unit: "Each" },
-    { _id: "ITEM003", name: "Suction Catheter FG-12", unit: "Each" },
-    { _id: "ITEM004", name: "Syringe 10ml", unit: "Each" },
-  ];
+  // // Mock inventory list
+  // const inventory = [
+  //   { _id: "ITEM001", name: "Ambu Bag Child", unit: "Each" },
+  //   { _id: "ITEM002", name: "Rectal Catheter 28G", unit: "Each" },
+  //   { _id: "ITEM003", name: "Suction Catheter FG-12", unit: "Each" },
+  //   { _id: "ITEM004", name: "Syringe 10ml", unit: "Each" },
+  // ];
 
   const [request, setRequest] = useState(null);
   const [selectedItem, setSelectedItem] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [inventory, setInventory] = useState(null);
+  const [categories, setCategories] = useState(null);
 
-  async function fetchRequest() {
+  const fetchRequest = async () => {
     try {
       const res = await fetch(`/api/purchase-requests/${id}`);
       const data = await res.json();
-      setMockRequest({
-        _id: id || "68e717ab1968f8c16a01bb21",
-        requester: { name: "John Doe", email: data.requester_email },
-        department: "Pharmacy",
-        remark: "Need supplies for upcoming week",
-        status: "Pending",
-        items: [
-          { _id: "ITEM001", name: "Ambu Bag Child", unit: "Each", quantity: 2 },
-          {
-            _id: "ITEM002",
-            name: "Rectal Catheter 28G",
-            unit: "Each",
-            quantity: 5,
-          },
-        ],
-      });
-      setRequest(mockRequest);
-
       console.log(data);
+      setRequest(data);
     } catch (err) {
       console.log(err);
     }
-  }
+  };
+  const fetchItems = async () => {
+    try {
+      const res = await fetch("/api/items");
+      const data = await res.json();
+      console.log(data);
+      setInventory(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const fetchCategories = async () => {
+    const res = await fetch("/api/categories/sort");
+    const data = await res.json();
+    setCategories(data);
+  };
 
   // Simulate API fetch
   useEffect(() => {
+    fetchItems();
+    fetchCategories();
     fetchRequest();
   }, []);
 
@@ -70,7 +72,7 @@ export default function PurchaseRequestDetails() {
     setQuantity(1);
   };
 
-  if (!request) {
+  if (!request && !inventory) {
     return <div className="p-6">Loading...</div>;
   }
 
@@ -115,11 +117,11 @@ export default function PurchaseRequestDetails() {
             className="border rounded-md p-2"
           >
             <option value="">-- Select Item --</option>
-            {inventory.map((item) => (
+            {/* {inventory.map((item) => (
               <option key={item._id} value={item._id}>
                 {item.name} ({item.unit})
               </option>
-            ))}
+            ))} */}
           </select>
           <input
             type="number"
