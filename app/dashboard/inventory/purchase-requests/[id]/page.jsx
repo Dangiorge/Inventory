@@ -7,25 +7,20 @@ export default function PurchaseRequestDetails() {
 
   const [mockRequest, setMockRequest] = useState();
 
-  // // Mock inventory list
-  // const inventory = [
-  //   { _id: "ITEM001", name: "Ambu Bag Child", unit: "Each" },
-  //   { _id: "ITEM002", name: "Rectal Catheter 28G", unit: "Each" },
-  //   { _id: "ITEM003", name: "Suction Catheter FG-12", unit: "Each" },
-  //   { _id: "ITEM004", name: "Syringe 10ml", unit: "Each" },
-  // ];
-
   const [request, setRequest] = useState(null);
   const [selectedItem, setSelectedItem] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [inventory, setInventory] = useState(null);
+  const [inventory, setInventory] = useState([]);
   const [categories, setCategories] = useState(null);
 
   const fetchRequest = async () => {
-    try {
+    try  {
       const res = await fetch(`/api/purchase-requests/${id}`);
       const data = await res.json();
-      console.log(data);
+      // console.log(data);
+      fetchItems();
+      // fetchCategories();
+      console.log(inventory);
       setRequest(data);
     } catch (err) {
       console.log(err);
@@ -35,22 +30,20 @@ export default function PurchaseRequestDetails() {
     try {
       const res = await fetch("/api/items");
       const data = await res.json();
-      console.log(data);
+      // console.log(data);
       setInventory(data);
     } catch (err) {
       console.log(err);
     }
   };
-  const fetchCategories = async () => {
-    const res = await fetch("/api/categories/sort");
-    const data = await res.json();
-    setCategories(data);
-  };
+  // const fetchCategories = async () => {
+  //   const res = await fetch("/api/categories/sort");
+  //   const data = await res.json();
+  //   setCategories(data);
+  // };
 
   // Simulate API fetch
   useEffect(() => {
-    fetchItems();
-    fetchCategories();
     fetchRequest();
   }, []);
 
@@ -72,7 +65,7 @@ export default function PurchaseRequestDetails() {
     setQuantity(1);
   };
 
-  if (!request && !inventory) {
+  if (!request) {
     return <div className="p-6">Loading...</div>;
   }
 
@@ -84,8 +77,7 @@ export default function PurchaseRequestDetails() {
           Purchase Request #{request._id.slice(-6)}
         </h2>
         <p>
-          <strong>Requester:</strong> {request.requester.name} (
-          {request.requester.email})
+          <strong>Requester:</strong> {request.requester_email}
         </p>
         <p>
           <strong>Department:</strong> {request.department}
@@ -117,11 +109,11 @@ export default function PurchaseRequestDetails() {
             className="border rounded-md p-2"
           >
             <option value="">-- Select Item --</option>
-            {/* {inventory.map((item) => (
+            {inventory.map((item) => (
               <option key={item._id} value={item._id}>
                 {item.name} ({item.unit})
               </option>
-            ))} */}
+            ))}
           </select>
           <input
             type="number"
